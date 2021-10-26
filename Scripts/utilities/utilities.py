@@ -45,24 +45,51 @@ for key,(filename,columns) in MAGColumnsRAW.items():
 def getMAGSortedPath(magName,sortColumnsNames):
     """
     Returns the sorted filename for a MAG dataset.
+
+    Args:
+        magName (str): The name of table in the MAG dataset.
+        sortColumnsNames (list): The names of the columns to sort by.
+
+    Returns:
+        str: The path to the sorted file.
     """
     return cfg.sortedPath/(magName+"_sorted_by%s.txt"%("-".join(sortColumnsNames)))
 
 def getMAGPaths(magName):
     """
     Returns the filenames for a MAG dataset.
+
+    Args:
+        magName (str): The name of table in the MAG dataset.
+
+    Returns:
+        list: The paths to the files.
     """
     return list(cfg.MAGPath.glob(magColumnsData[magName]["Filename"]))
 
 def getMAGMergedPath(magName):
     """
     Returns the merged for a MAG dataset.
+
+    Args:
+        magName (str): The name of table in the MAG dataset.
+
+    Returns:
+        str: The path to the merged file.
     """
     return cfg.sortedPath/(magName+"_merged.txt")
 
 def getMAGCompressedPath(magName,sortColumnsNames=[]):
     """
     Returns the compressed filename for a MAG dataset.
+
+    Args:
+        magName (str): The name of table in the MAG dataset.
+        sortColumnsNames (list): The names of the columns to sort by.
+
+    Returns:
+        str: The path to the compressed file.
+
     """
     if(sortColumnsNames):
         return cfg.processedPath/(magName+"_sorted_by%s.dbgz"%("-".join(sortColumnsNames)))
@@ -73,15 +100,31 @@ def getMAGCompressedPath(magName,sortColumnsNames=[]):
 def getMAGIndexPath(magName,indexKey,sortColumnsNames=[]):
     """
     Returns the filename for the index of a MAG dataset.
+
+    Args:
+        magName (str): The name of table in the MAG dataset.
+        indexKey (str): The name of the index.
+        sortColumnsNames (list): The names of the columns to sort by.
+
+    Returns:
+        str: The path to the index file.
+
     """
     if(sortColumnsNames):
-        return cfg.processedPath/(magName+"_sorted_by%s.idbgz"%("-".join(sortColumnsNames)))
+        return cfg.processedPath/(magName+"_sorted_by%s_indexedBy%s.idbgz"%("-".join(sortColumnsNames),indexKey))
     else:
-        return cfg.processedPath/(magName+".idbgz")
+        return cfg.processedPath/(magName+"_indexedBy%s.idbgz"%(indexKey))
 
 def sortMAGFile(magName,sortColumnsNames,force=False,useSamstools=False):
     """
     Sorts the MAG files by sortColumnsNames
+
+    Args:
+        magName (str): The name of table in the MAG dataset.
+        sortColumnsNames (list): The names of the columns to sort by.
+        force (bool): If True, will overwrite the sorted file.
+        useSamstools (bool): If True, will use samstools to sort the file.
+
     """
     filePaths = getMAGPaths(magName)
     sortedFilePath = getMAGSortedPath(magName,sortColumnsNames)
@@ -142,6 +185,15 @@ def sortMAGFile(magName,sortColumnsNames,force=False,useSamstools=False):
 # ]
 
 def compressMAGFile(magName,sortColumnsNames=[], estimatedCount = 0):
+    """
+    Compresses the MAG files by sortColumnsNames
+
+    Args:
+        magName (str): The name of table in the MAG dataset.
+        sortColumnsNames (list): The names of the columns to sort by.
+        estimatedCount (int): The estimated number of lines in the file.
+
+    """
     if(sortColumnsNames):
         inputFilePath = getMAGSortedPath(magName,sortColumnsNames)
     else:
@@ -156,7 +208,7 @@ def compressMAGFile(magName,sortColumnsNames=[], estimatedCount = 0):
             pbar = tqdm(total=estimatedCount)
             for line in infd:
                 pbar.update(1)
-                entries = line.decode("utf8").strip("\n").split("\t")
+                entries = line.decode("utf8").rstrip("\r\n").split("\t")
                 encodedEntries = [entry[0] for entry in outfd.index2Type]
                 for columnIndex,entry in enumerate(entries):
                     if(entry):
@@ -164,3 +216,42 @@ def compressMAGFile(magName,sortColumnsNames=[], estimatedCount = 0):
                 outfd.writeFromArray(encodedEntries)
             pbar.refresh()
             pbar.close()
+
+
+
+# def aggregateMAGFile(magName,newName,sortColumnsNames,aggrecatedColumns=[]):
+#     """
+#     Aggregates the MAG compressed files sorted by sortColumnsNames using the
+#     first sorted  according
+#     to the aggregation instructions in aggrecatedColumns.
+
+#     Args:
+#         magName (str): The name of table in the MAG dataset.
+#         sortColumnsNames (list): The names of the columns to sort by.
+#         aggrecatedColumns (list): The aggregation entries contains
+#         the aggregation column names, keys and the aggregation functions.
+#         Use (name,key,"first") to get the first value appearing for each
+#         entry, (name,key,"list") to get a list of all values for each entry.
+
+#     """
+#     if(not sortColumnsNames):
+#         raise Exception("sortColumnsNames must be specified")
+#     if(newName in magColumnsData):
+#         raise Exception("newName %s already exists"%(newName))
+#     inputFilePath = getMAGCompressedPath(magName,sortColumnsNames)
+#     outputFilePath = getMAGCompressedPath(newName)
+#     SchemaParser = magColumnsData[magName]["SchemaParser"]
+#     SchemaParserDictionary = dict(SchemaParser)
+#     newSchemaParser = []
+#     newSchemaParser.append((sortColumnsNames[0],SchemaParserDictionary[sortColumnsNames[0]]))
+#     for columnName,key,aggregationFunction in aggrecatedColumns:
+#         newSchemaParser.append((columnName,SchemaParserDictionary[columnName].upper()))
+#     with dbgz.DBGZReader(inputFilePath) as infd:
+#         with dbgz.DBGZWriter(outputFilePath,schema) as outfd:
+#             for entry in tqdm(infd.entries,total=infd.entriesCount,desc="Authors Dataset"):
+#                 paperID = entry["PaperId"]
+#                 authorID = entry["AuthorId"]
+#                 if(paperID in paper2Index):
+#                     paperIndex = paper2Index[paperID]
+#                     fdOut.write("%d\t%d\n"%(paperIndex,authorID))
+

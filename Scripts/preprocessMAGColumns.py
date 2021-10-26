@@ -7,8 +7,7 @@ import numpy as np
 import subprocess
 import gzip
 import json
-from .. import utilities as ut
-from .. import config as cfg
+import config as cfg
 from pathlib import Path
 # Set the PATH to MAG Folder
 

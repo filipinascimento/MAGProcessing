@@ -17,7 +17,21 @@ temporaryPath = cfg.temporaryPath
 
 
 print("Processing Journals...")
-ut.compressMAGFile("Journals",["JournalId"])
+ut.compressMAGFile("Journals",["JournalId"],estimatedCount=49041)
+
+print("Processing PaperMeSH...")
+ut.compressMAGFile("PaperMeSH",["PaperId","DescriptorUI","QualifierUI"],estimatedCount=447455981)
+
+print("Processing Papers...")
+ut.compressMAGFile("Papers",["PaperId"],estimatedCount = 265150698)
+
+print("Processing PaperReferences...")
+ut.compressMAGFile("PaperReferences",["PaperId"],estimatedCount = 1871482756)
+
+print("Processing PaperReferences By Reference...")
+ut.compressMAGFile("PaperReferences",["PaperReferenceId"],estimatedCount = 1871482756)
+
+
 
 print("Processing PaperAuthorAffiliations...")
 ut.compressMAGFile("PaperAuthorAffiliations",["PaperId","AuthorId","AuthorSequenceNumber"])
@@ -32,17 +46,8 @@ ut.compressMAGFile("Papers",["JournalId","Year"])
 print("Processing PaperFieldsOfStudy...")
 ut.compressMAGFile("PaperFieldsOfStudy",["PaperId","FieldOfStudyId"])
 
-print("Processing PaperMeSH...")
-ut.compressMAGFile("PaperMeSH",["PaperId","DescriptorUI","QualifierUI"])
 
-print("Processing PaperReferences...")
-ut.compressMAGFile("PaperReferences",["PaperId"])
 
-print("Processing PaperReferences By Reference...")
-ut.compressMAGFile("PaperReferences",["PaperReferenceId"])
-
-print("Processing Papers...")
-ut.compressMAGFile("Papers",["PaperId"])
 
 print("Processing Abstracts...")
 ut.compressMAGFile("PaperAbstractsInvertedIndex",["PaperId"])
@@ -55,32 +60,32 @@ ut.compressMAGFile("Authors",["AuthorId"],estimatedCount=238938563)
 # Filter function, create a new dbgz with only the requested columns
 
 
-import config as cfg
-import utilities as ut
-import dbgz
-from tqdm.auto import tqdm
-compressedFilename = ut.getMAGCompressedPath("PaperReferences",["PaperReferenceId"])
+# import config as cfg
+# import utilities as ut
+# import dbgz
+# from tqdm.auto import tqdm
+# compressedFilename = ut.getMAGCompressedPath("PaperReferences",["PaperReferenceId"])
 
-with dbgz.DBGZReader(compressedFilename) as dataset:
-    for entry in tqdm(dataset.entriesAsList,total=dataset.entriesCount):
-        pass
+# with dbgz.DBGZReader(compressedFilename) as dataset:
+#     for entry in tqdm(dataset.entriesAsList,total=dataset.entriesCount):
+#         pass
 
 
 
-def testReadSpeedMAGFile(magName,sortColumnsNames=[], estimatedCount = 0):
-    if(sortColumnsNames):
-        inputFilePath = ut.getMAGSortedPath(magName,sortColumnsNames)
-    else:
-        inputFilePath = ut.getMAGPaths(magName)[0]
+# def testReadSpeedMAGFile(magName,sortColumnsNames=[], estimatedCount = 0):
+#     if(sortColumnsNames):
+#         inputFilePath = ut.getMAGSortedPath(magName,sortColumnsNames)
+#     else:
+#         inputFilePath = ut.getMAGPaths(magName)[0]
     
-    with open(inputFilePath,"rb") as infd:
-        for line in tqdm(infd,total=estimatedCount):
-            pass
+#     with open(inputFilePath,"rb") as infd:
+#         for line in tqdm(infd,total=estimatedCount):
+#             pass
 
 
-testReadSpeedMAGFile("PaperReferences",["PaperReferenceId"])
+# testReadSpeedMAGFile("PaperReferences",["PaperReferenceId"])
 
-PaperMeSH
+# PaperMeSH
 
 # Citations  (edge list) reindexed
 # AuthorID PaperID (reindex)
